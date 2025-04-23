@@ -1,0 +1,91 @@
+.app {
+	display: flex;
+	background-color: white;
+	flex-direction: column;
+	align-items: center;
+	padding: 2rem;
+	min-height: 100vh;
+	width: 100%;
+}
+
+.track-list-wrapper {
+	width: 100%;
+	max-width: 1200px;
+}
+
+.blue-button {
+	background-color: #3b82f6;
+	color: white;
+	padding: 0.75rem 1.5rem;
+	border: none;
+	border-radius: 0.5rem;
+	font-size: 1rem;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	margin: 0 auto 1.5rem;
+	display: block;
+	margin-top: 6px;
+}
+
+.blue-button:hover {
+	background-color: #2563eb;
+	transform: translateY(-1px);
+}
+
+.error-message {
+	color: #dc3545;
+	background-color: #fee2e2;
+	padding: 0.75rem;
+	border-radius: 0.5rem;
+	margin: 1rem 0;
+	width: 100%;
+	text-align: center;
+}
+
+.loading-indicator {
+	display: flex;
+	justify-content: center;
+	padding: 2rem;
+}
+
+.loading-container {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 20px;
+	margin: 20px 0;
+}
+
+.loading-spinner {
+	width: 50px;
+	height: 50px;
+	border: 5px solid #f3f3f3;
+	border-top: 5px solid #3498db;
+	border-radius: 50%;
+	animation: spin 1s linear infinite;
+	margin-bottom: 10px;
+}
+
+@keyframes spin {
+	0% {
+		transform: rotate(0deg);
+	}
+
+	100% {
+		transform: rotate(360deg);
+	}
+}
+
+.loading-container p {
+	color: #3498db;
+	font-size: 1.2rem;
+	margin-top: 10px;
+}
+
+@media (max-width: 768px) {
+	.app {
+		padding: 1rem;
+	}
+}

@@ -1,0 +1,173 @@
+.overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: rgba(0, 0, 0, 0.5);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	z-index: 1000;
+}
+
+.modal {
+	background: white;
+	border-radius: 8px;
+	padding: 20px;
+	width: 90%;
+	max-width: 500px;
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.modal h2 {
+	color: #000000;
+	font-size: 1.5em;
+	margin-bottom: 20px;
+	text-align: center;
+}
+
+.form-group {
+	margin-bottom: 15px;
+	margin-right: 20px;
+}
+
+.form-group label {
+	display: block;
+	margin-bottom: 5px;
+	font-weight: 500;
+}
+
+input,
+select {
+	width: 100%;
+	padding: 8px;
+	margin-bottom: 10px;
+	border: 1px solid #ddd;
+	border-radius: 5px;
+	font-size: 14px;
+}
+
+.genre-tags-container {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-bottom: 10px;
+}
+
+.genre-tag {
+	background: #e0f2fe;
+	color: #0369a1;
+	padding: 4px 12px;
+	border-radius: 9999px;
+	font-size: 14px;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.remove-genre-btn {
+	background: none;
+	border: none;
+	color: #0369a1;
+	cursor: pointer;
+	font-size: 14px;
+	padding: 0;
+	line-height: 1;
+}
+
+.genre-selector {
+	display: flex;
+	gap: 8px;
+}
+
+.genre-dropdown {
+	flex: 1;
+}
+
+.add-genre-btn {
+	background-color: #007bff;
+	color: white;
+	border: none;
+	border-radius: 5px;
+	padding: 0;
+	width: 36px;
+	height: 36px;
+	cursor: pointer;
+	font-size: 18px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: background-color 0.3s ease;
+}
+
+.add-genre-btn:hover {
+	background-color: #0056b3;
+}
+
+.add-genre-btn:disabled {
+	background-color: #cccccc;
+	cursor: not-allowed;
+}
+
+.cover-preview {
+	margin: 15px 0;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.cover-preview img {
+	width: 100px;
+	height: 100px;
+	object-fit: cover;
+	border-radius: 5px;
+	border: 1px solid #ddd;
+}
+
+.modal-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 10px;
+	margin-top: 20px;
+}
+
+.modal-actions button {
+	padding: 8px 16px;
+	border-radius: 5px;
+	cursor: pointer;
+	transition: background-color 0.3s ease;
+}
+
+.cancel-btn {
+	background-color: #6c757d;
+	color: white;
+	border: none;
+}
+
+.cancel-btn:hover {
+	background-color: #5a6268;
+}
+
+.save-btn {
+	background-color: #007bff;
+	color: white;
+	border: none;
+}
+
+.save-btn:hover {
+	background-color: #0056b3;
+}
+
+.error-message {
+	color: #dc3545;
+	font-size: 12px;
+	margin-top: -8px;
+	margin-bottom: 10px;
+	display: block;
+	margin-right: 30px;
+}
+
+.error-input {
+	border-color: #dc3545;
+}
