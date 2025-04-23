@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import Modal from "react-modal";
-//import "./CreateTrackModal.css";
+import "./CreateTrackModal.css";
 import { DEFAULT_COVER_PLACEHOLDER, GENRES } from "../../config";
 
 interface TrackFormData {
@@ -124,7 +124,7 @@ const BaseTrackModal: React.FC<BaseTrackModalProps> = ({
 				<h2>{modalTitle}</h2>
 
 				<div className="form-group">
-					<label htmlFor="track-title">Title *</label>
+					<label htmlFor="track-title">Title</label>
 					<input
 						id="track-title"
 						value={title}
@@ -137,7 +137,7 @@ const BaseTrackModal: React.FC<BaseTrackModalProps> = ({
 				</div>
 
 				<div className="form-group">
-					<label htmlFor="track-artist">Artist *</label>
+					<label htmlFor="track-artist">Artist</label>
 					<input
 						id="track-artist"
 						value={artist}

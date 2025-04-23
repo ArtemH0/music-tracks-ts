@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
-//import "./TrackList.css";
+import "./TrackList.css"; // Assuming you have a CSS file for styling
 import { DEFAULT_COVER, FILES_BASE_URL, GENRES } from "../../config";
 
 interface Track {
