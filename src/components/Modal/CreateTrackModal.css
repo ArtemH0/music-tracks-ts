@@ -86,8 +86,8 @@ select {
 }
 
 .add-genre-btn {
-	background-color: #007bff;
-	color: white;
+	background-color: #e0e0e0;
+	color: #666;
 	border: none;
 	border-radius: 5px;
 	padding: 0;
@@ -98,16 +98,25 @@ select {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	transition: background-color 0.3s ease;
+	transition: all 0.3s ease;
 }
 
 .add-genre-btn:hover {
-	background-color: #0056b3;
+	background-color: #d0d0d0;
 }
 
-.add-genre-btn:disabled {
-	background-color: #cccccc;
+.add-genr-btn:disabled {
+	background-color: #e0e0e0;
 	cursor: not-allowed;
+}
+
+.add-genre-btn:not(:disabled) {
+	background-color: #007bff;
+	color: white;
+}
+
+.add-genre-btn:not(:disabled):hover {
+	background-color: #0056b3;
 }
 
 .cover-preview {

@@ -14,7 +14,10 @@ const TrackSchema = z.object({
 	coverImage: z
 		.string()
 		.transform((val) => val || "")
-		.refine((val) => /^https?:\/\/.+/i.test(val) || val === "", "Invalid image URL"),
+		.refine(
+			(val) => /^https?:\/\/.+/i.test(val) || val === "",
+			"Invalid image URL"
+		),
 });
 
 export type TrackFormData = z.infer<typeof TrackSchema>;
@@ -26,6 +29,11 @@ interface BaseTrackModalProps {
 	initialData?: Partial<TrackFormData>;
 	modalTitle?: string;
 	submitButtonText?: string;
+	externalErrors?: {
+		title?: string;
+		artist?: string;
+		coverImage?: string;
+	};
 }
 
 const BaseTrackModal: React.FC<BaseTrackModalProps> = ({
@@ -41,6 +49,7 @@ const BaseTrackModal: React.FC<BaseTrackModalProps> = ({
 	},
 	modalTitle = "Track",
 	submitButtonText = "Save",
+	externalErrors = {},
 }) => {
 	const {
 		register,
@@ -95,6 +104,12 @@ const BaseTrackModal: React.FC<BaseTrackModalProps> = ({
 		);
 	};
 
+	const allErrors = {
+		title: externalErrors.title || errors.title?.message,
+		artist: externalErrors.artist || errors.artist?.message,
+		coverImage: externalErrors.coverImage || errors.coverImage?.message,
+	};
+
 	return (
 		<Modal
 			isOpen={isOpen}
@@ -111,11 +126,11 @@ const BaseTrackModal: React.FC<BaseTrackModalProps> = ({
 					<input
 						id="track-title"
 						{...register("title")}
-						className={errors.title ? "error-input" : ""}
+						className={allErrors.title ? "error-input" : ""}
 						placeholder="Enter track title"
 					/>
-					{errors.title && (
-						<span className="error-message">{errors.title.message}</span>
+					{allErrors.title && (
+						<span className="error-message">{allErrors.title}</span>
 					)}
 				</div>
 
@@ -124,11 +139,11 @@ const BaseTrackModal: React.FC<BaseTrackModalProps> = ({
 					<input
 						id="track-artist"
 						{...register("artist")}
-						className={errors.artist ? "error-input" : ""}
+						className={allErrors.artist ? "error-input" : ""}
 						placeholder="Enter artist name"
 					/>
-					{errors.artist && (
-						<span className="error-message">{errors.artist.message}</span>
+					{allErrors.artist && (
+						<span className="error-message">{allErrors.artist}</span>
 					)}
 				</div>
 
@@ -171,7 +186,13 @@ const BaseTrackModal: React.FC<BaseTrackModalProps> = ({
 								</option>
 							))}
 						</select>
-						<button type="button" onClick={addGenre} disabled={!newGenre}>
+						<button
+							type="button"
+							className="add-genre-btn"
+							onClick={addGenre}
+							disabled={!newGenre}
+							aria-label="Add genre"
+						>
 							+
 						</button>
 					</div>
@@ -182,11 +203,11 @@ const BaseTrackModal: React.FC<BaseTrackModalProps> = ({
 					<input
 						id="track-cover"
 						{...register("coverImage")}
-						className={errors.coverImage ? "error-input" : ""}
+						className={allErrors.coverImage ? "error-input" : ""}
 						placeholder="https://example.com/cover.jpg"
 					/>
-					{errors.coverImage && (
-						<span className="error-message">{errors.coverImage.message}</span>
+					{allErrors.coverImage && (
+						<span className="error-message">{allErrors.coverImage}</span>
 					)}
 				</div>
 
@@ -217,4 +238,4 @@ const BaseTrackModal: React.FC<BaseTrackModalProps> = ({
 	);
 };
 
-export default BaseTrackModal;
+export default React.memo(BaseTrackModal);
