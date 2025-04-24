@@ -1,14 +1,6 @@
 import React from "react";
-import BaseTrackModal from "./BaseTrackModal";
-
-interface Track {
-	id: string;
-	title: string;
-	artist: string;
-	album?: string;
-	genres?: string[];
-	coverImage?: string;
-}
+import BaseTrackModal, { TrackFormData } from "./BaseTrackModal";
+import type { Track } from "../../types/track.types";
 
 interface EditTrackModalProps {
 	isOpen: boolean;
@@ -23,25 +15,33 @@ const EditTrackModal: React.FC<EditTrackModalProps> = ({
 	track,
 	onSave,
 }) => {
+	const handleSave = (formData: TrackFormData) => {
+		if (track) {
+			onSave({
+				...track,
+				title: formData.title,
+				artist: formData.artist,
+				album: formData.album || "",
+				genres: formData.genres || [],
+				coverUrl: formData.coverImage || "",
+			});
+		}
+	};
+
 	return (
 		<BaseTrackModal
 			isOpen={isOpen}
 			onRequestClose={onRequestClose}
-			onSave={(updatedData) => {
-				if (track) {
-					onSave({ ...track, ...updatedData });
-				}
-			}}
+			onSave={handleSave}
 			initialData={{
 				title: track?.title || "",
 				artist: track?.artist || "",
 				album: track?.album || "",
 				genres: track?.genres || [],
-				coverImage: track?.coverImage || "",
+				coverImage: track?.coverUrl || "",
 			}}
 			modalTitle="Edit Track"
 			submitButtonText="Save Changes"
-			handleOnClose={() => {}}
 		/>
 	);
 };

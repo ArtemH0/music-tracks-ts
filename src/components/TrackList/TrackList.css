@@ -337,6 +337,20 @@ audio {
 	box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
 
+.clear-sort-button {
+	background-color: #1e88e5;
+	color: black;
+	border: none;
+	padding: 8px 16px;
+	border-radius: 4px;
+	cursor: pointer;
+	font-size: 14px;
+}
+
+.clear-sort-button:hover {
+	background-color: #1565c0;
+}
+
 @media (max-width: 768px) {
 	.track-item {
 		flex-direction: column;

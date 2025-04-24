@@ -1,16 +1,10 @@
 import React from "react";
-import BaseTrackModal from "./BaseTrackModal";
+import BaseTrackModal, { TrackFormData } from "./BaseTrackModal";
 
 interface CreateTrackModalProps {
 	isOpen: boolean;
 	onRequestClose: () => void;
-	onSave: (data: {
-		title: string;
-		artist: string;
-		album: string;
-		genres: string[];
-		coverImage: string;
-	}) => void;
+	onSave: (data: TrackFormData & { coverImage: string }) => void;
 }
 
 const CreateTrackModal: React.FC<CreateTrackModalProps> = ({
@@ -18,24 +12,6 @@ const CreateTrackModal: React.FC<CreateTrackModalProps> = ({
 	onRequestClose,
 	onSave,
 }) => {
-	const validateForm = ({
-		title,
-		artist,
-		coverLink,
-	}: {
-		title: string;
-		artist: string;
-		coverLink: string;
-	}) => {
-		const newErrors: Record<string, string> = {};
-		if (!title.trim()) newErrors.title = "Title is required";
-		if (!artist.trim()) newErrors.artist = "Artist is required";
-		if (coverLink && !/^https?:\/\/.+/i.test(coverLink)) {
-			newErrors.cover = "Invalid image URL";
-		}
-		return newErrors;
-	};
-
 	return (
 		<BaseTrackModal
 			isOpen={isOpen}
@@ -43,7 +19,6 @@ const CreateTrackModal: React.FC<CreateTrackModalProps> = ({
 			onSave={onSave}
 			modalTitle="Create New Track"
 			submitButtonText="Save Track"
-			validateForm={validateForm}
 		/>
 	);
 };

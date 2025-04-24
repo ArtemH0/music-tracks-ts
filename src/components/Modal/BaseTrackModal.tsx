@@ -1,41 +1,32 @@
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import Modal from "react-modal";
-import "./CreateTrackModal.css";
+import { useForm, SubmitHandler } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { DEFAULT_COVER_PLACEHOLDER, GENRES } from "../../config";
+import "./CreateTrackModal.css";
 
-interface TrackFormData {
-	title: string;
-	artist: string;
-	album: string;
-	genres: string[];
-	coverImage: string;
-}
+const TrackSchema = z.object({
+	title: z.string().min(1, "Title is required"),
+	artist: z.string().min(1, "Artist is required"),
+	album: z.string().transform((val) => val || ""),
+	genres: z.array(z.string()).transform((val) => val || []),
+	coverImage: z
+		.string()
+		.transform((val) => val || "")
+		.refine((val) => /^https?:\/\/.+/i.test(val) || val === "", "Invalid image URL"),
+});
 
-interface FormErrors {
-	title?: string;
-	artist?: string;
-	cover?: string;
-	[key: string]: string | undefined;
-}
+export type TrackFormData = z.infer<typeof TrackSchema>;
 
 interface BaseTrackModalProps {
 	isOpen: boolean;
 	onRequestClose: () => void;
-	onSave: (
-		data: Omit<TrackFormData, "coverImage"> & { coverImage: string }
-	) => void;
+	onSave: (data: TrackFormData) => void;
 	initialData?: Partial<TrackFormData>;
 	modalTitle?: string;
 	submitButtonText?: string;
-	validateForm?: (data: {
-		title: string;
-		artist: string;
-		coverLink: string;
-	}) => FormErrors;
-	handleOnClose?: () => void;
 }
-
-const isValidImageUrl = (url: string) => /^https?:\/\/.+/i.test(url);
 
 const BaseTrackModal: React.FC<BaseTrackModalProps> = ({
 	isOpen,
@@ -50,102 +41,94 @@ const BaseTrackModal: React.FC<BaseTrackModalProps> = ({
 	},
 	modalTitle = "Track",
 	submitButtonText = "Save",
-	validateForm,
-	handleOnClose,
 }) => {
-	const [title, setTitle] = useState(initialData.title || "");
-	const [artist, setArtist] = useState(initialData.artist || "");
-	const [album, setAlbum] = useState(initialData.album || "");
-	const [genres, setGenres] = useState(initialData.genres || []);
-	const [newGenre, setNewGenre] = useState("");
-	const [coverLink, setCoverLink] = useState(initialData.coverImage || "");
-	const [errors, setErrors] = useState<FormErrors>({});
+	const {
+		register,
+		handleSubmit,
+		reset,
+		setValue,
+		watch,
+		formState: { errors },
+	} = useForm<TrackFormData>({
+		resolver: zodResolver(TrackSchema),
+		defaultValues: {
+			title: initialData.title ?? "",
+			artist: initialData.artist ?? "",
+			album: initialData.album ?? "",
+			genres: initialData.genres ?? [],
+			coverImage: initialData.coverImage ?? "",
+		},
+	});
+
+	const genres = watch("genres") || [];
+	const coverImage = watch("coverImage") || "";
+	const [newGenre, setNewGenre] = React.useState("");
+
+	useEffect(() => {
+		if (isOpen) {
+			reset({
+				title: initialData.title ?? "",
+				artist: initialData.artist ?? "",
+				album: initialData.album ?? "",
+				genres: initialData.genres ?? [],
+				coverImage: initialData.coverImage ?? "",
+			});
+		}
+	}, [isOpen, initialData, reset]);
+
+	const onSubmit: SubmitHandler<TrackFormData> = (data) => {
+		onSave(data);
+		onRequestClose();
+	};
 
 	const addGenre = () => {
 		if (newGenre && !genres.includes(newGenre)) {
-			setGenres([...genres, newGenre]);
+			setValue("genres", [...genres, newGenre]);
 			setNewGenre("");
 		}
 	};
 
 	const removeGenre = (genreToRemove: string) => {
-		setGenres(genres.filter((genre) => genre !== genreToRemove));
-	};
-
-	const resetForm = () => {
-		setTitle(initialData.title || "");
-		setArtist(initialData.artist || "");
-		setAlbum(initialData.album || "");
-		setGenres(initialData.genres || []);
-		setNewGenre("");
-		setCoverLink(initialData.coverImage || "");
-		setErrors({});
-	};
-
-	const handleSubmit = () => {
-		// Run validation if provided
-		if (validateForm) {
-			const validationErrors = validateForm({ title, artist, coverLink });
-			if (validationErrors && Object.keys(validationErrors).length > 0) {
-				setErrors(validationErrors);
-				return;
-			}
-		}
-
-		const trackData = {
-			title,
-			artist,
-			album: album.trim(),
-			genres,
-			coverImage: isValidImageUrl(coverLink) ? coverLink : "",
-		};
-
-		onSave(trackData);
-		onRequestClose();
-	};
-
-	const handleClose = () => {
-		if (handleOnClose) {
-			handleOnClose();
-		} else {
-			resetForm();
-		}
-		onRequestClose();
+		setValue(
+			"genres",
+			genres.filter((genre) => genre !== genreToRemove)
+		);
 	};
 
 	return (
 		<Modal
 			isOpen={isOpen}
-			onRequestClose={handleClose}
+			onRequestClose={onRequestClose}
 			className="modal"
 			overlayClassName="overlay"
+			ariaHideApp={false}
 		>
-			<div className="modal-body">
+			<form onSubmit={handleSubmit(onSubmit)} className="modal-body">
 				<h2>{modalTitle}</h2>
 
 				<div className="form-group">
-					<label htmlFor="track-title">Title</label>
+					<label htmlFor="track-title">Title *</label>
 					<input
 						id="track-title"
-						value={title}
-						onChange={(e) => setTitle(e.target.value)}
+						{...register("title")}
 						className={errors.title ? "error-input" : ""}
+						placeholder="Enter track title"
 					/>
 					{errors.title && (
-						<span className="error-message">{errors.title}</span>
+						<span className="error-message">{errors.title.message}</span>
 					)}
 				</div>
 
 				<div className="form-group">
-					<label htmlFor="track-artist">Artist</label>
+					<label htmlFor="track-artist">Artist *</label>
 					<input
 						id="track-artist"
-						value={artist}
-						onChange={(e) => setArtist(e.target.value)}
+						{...register("artist")}
 						className={errors.artist ? "error-input" : ""}
+						placeholder="Enter artist name"
 					/>
 					{errors.artist && (
-						<span className="error-message">{errors.artist}</span>
+						<span className="error-message">{errors.artist.message}</span>
 					)}
 				</div>
 
@@ -153,8 +136,8 @@ const BaseTrackModal: React.FC<BaseTrackModalProps> = ({
 					<label htmlFor="track-album">Album</label>
 					<input
 						id="track-album"
-						value={album}
-						onChange={(e) => setAlbum(e.target.value)}
+						{...register("album")}
+						placeholder="Enter album name (optional)"
 					/>
 				</div>
 
@@ -168,7 +151,6 @@ const BaseTrackModal: React.FC<BaseTrackModalProps> = ({
 									type="button"
 									className="remove-genre-btn"
 									onClick={() => removeGenre(genre)}
-									aria-label={`Remove ${genre}`}
 								>
 									×
 								</button>
@@ -183,21 +165,13 @@ const BaseTrackModal: React.FC<BaseTrackModalProps> = ({
 							className="genre-dropdown"
 						>
 							<option value="">Select a genre</option>
-							{GENRES.filter((genre) => !genres.includes(genre)).map(
-								(genre) => (
-									<option key={genre} value={genre}>
-										{genre}
-									</option>
-								)
-							)}
+							{GENRES.filter((g) => !genres.includes(g)).map((genre) => (
+								<option key={genre} value={genre}>
+									{genre}
+								</option>
+							))}
 						</select>
-						<button
-							type="button"
-							className="add-genre-btn"
-							onClick={addGenre}
-							disabled={!newGenre}
-							aria-label="Add genre"
-						>
+						<button type="button" onClick={addGenre} disabled={!newGenre}>
 							+
 						</button>
 					</div>
@@ -207,19 +181,21 @@ const BaseTrackModal: React.FC<BaseTrackModalProps> = ({
 					<label htmlFor="track-cover">Cover Image URL</label>
 					<input
 						id="track-cover"
-						value={coverLink}
-						onChange={(e) => setCoverLink(e.target.value)}
-						className={errors.cover ? "error-input" : ""}
+						{...register("coverImage")}
+						className={errors.coverImage ? "error-input" : ""}
+						placeholder="https://example.com/cover.jpg"
 					/>
-					{errors.cover && (
-						<span className="error-message">{errors.cover}</span>
+					{errors.coverImage && (
+						<span className="error-message">{errors.coverImage.message}</span>
 					)}
 				</div>
 
 				<div className="cover-preview">
 					<img
 						src={
-							isValidImageUrl(coverLink) ? coverLink : DEFAULT_COVER_PLACEHOLDER
+							coverImage && /^https?:\/\/.+/.test(coverImage)
+								? coverImage
+								: DEFAULT_COVER_PLACEHOLDER
 						}
 						alt="Cover preview"
 						onError={(e) => {
@@ -229,14 +205,14 @@ const BaseTrackModal: React.FC<BaseTrackModalProps> = ({
 				</div>
 
 				<div className="modal-actions">
-					<button type="button" className="cancel-btn" onClick={handleClose}>
+					<button type="button" className="cancel-btn" onClick={onRequestClose}>
 						Cancel
 					</button>
-					<button type="button" className="save-btn" onClick={handleSubmit}>
+					<button type="submit" className="save-btn">
 						{submitButtonText}
 					</button>
 				</div>
-			</div>
+			</form>
 		</Modal>
 	);
 };

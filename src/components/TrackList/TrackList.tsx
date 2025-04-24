@@ -1,57 +1,7 @@
-import React, { useRef, useState, useEffect } from "react";
-import "./TrackList.css"; // Assuming you have a CSS file for styling
+import React, { useRef, useState, useEffect, useCallback } from "react";
+import "./TrackList.css";
 import { DEFAULT_COVER, FILES_BASE_URL, GENRES } from "../../config";
-
-interface Track {
-	id: string;
-	title: string;
-	artist: string;
-	album?: string;
-	genre?: string;
-	genres?: string[];
-	coverImage?: string;
-	audioFile?: string;
-	createdAt?: string;
-}
-
-interface PaginationMeta {
-	page: number;
-	limit: number;
-	totalPages: number;
-}
-
-interface SortConfig {
-	key: string | null;
-	direction: "asc" | "desc";
-}
-
-interface Filters {
-	artist: string;
-	genre: string;
-	search: string;
-}
-
-interface TrackListProps {
-	tracks: Track[];
-	paginationMeta: PaginationMeta;
-	onEdit: (track: Track) => void;
-	onDelete: (track: Track) => void;
-	onUpload: (track: Track, file: File) => void;
-	onRemoveFile: (track: Track) => void;
-	fetchTracks: (params: {
-		page: number;
-		limit: number;
-		sort?: string;
-		order?: "asc" | "desc";
-		artist?: string;
-		genre?: string;
-		search?: string;
-	}) => void;
-	onPageChange: (page: number) => void;
-	initialLoading: boolean;
-	loading: boolean;
-	error: string | null;
-}
+import type { TrackListProps } from "../../types/track.types";
 
 const TrackList: React.FC<TrackListProps> = ({
 	tracks,
@@ -62,69 +12,42 @@ const TrackList: React.FC<TrackListProps> = ({
 	onRemoveFile,
 	fetchTracks,
 	onPageChange,
-	initialLoading,
+	loading,
 }) => {
 	const audioRefs = useRef<Record<string, HTMLAudioElement | null>>({});
 	const [currentPlayingId, setCurrentPlayingId] = useState<string | null>(null);
-	const [sortConfig, setSortConfig] = useState<SortConfig>({
+	const [sortConfig, setSortConfig] = useState<{
+		key: string | null;
+		direction: "asc" | "desc";
+	}>({
 		key: null,
 		direction: "asc",
 	});
-	const [filters, setFilters] = useState<Filters>({
+	const [filters, setFilters] = useState<{
+		artist: string;
+		genre: string;
+		search: string;
+	}>({
 		artist: "",
 		genre: "",
 		search: "",
 	});
-	const [loading, setLoading] = useState(initialLoading);
-	const isInitialMount = useRef(true);
+	const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
+
+	const debounce = useCallback((func: () => void, delay: number) => {
+		if (debounceTimeout.current) {
+			clearTimeout(debounceTimeout.current);
+		}
+		debounceTimeout.current = setTimeout(func, delay);
+	}, []);
 
 	useEffect(() => {
-		setLoading(initialLoading);
-	}, [initialLoading]);
-
-	useEffect(() => {
-		if (isInitialMount.current) {
-			isInitialMount.current = false;
-			return;
-		}
-
-		setLoading(true);
-		const params: {
-			page: number;
-			limit: number;
-			sort?: string;
-			order?: "asc" | "desc";
-			artist?: string;
-			genre?: string;
-			search?: string;
-		} = {
-			page: paginationMeta.page,
-			limit: paginationMeta.limit,
-			artist: filters.artist || undefined,
-			genre: filters.genre || undefined,
-			search: filters.search || undefined,
-		};
-
-		if (sortConfig.key) {
-			params.sort = sortConfig.key;
-			params.order = sortConfig.direction;
-		}
-
-		const timeoutId = setTimeout(() => {
-			Promise.resolve(fetchTracks(params)).finally(() => setLoading(false));
-		}, 300);
-
 		return () => {
-			clearTimeout(timeoutId);
-			setLoading(false);
+			if (debounceTimeout.current) {
+				clearTimeout(debounceTimeout.current);
+			}
 		};
-	}, [
-		paginationMeta.page,
-		paginationMeta.limit,
-		filters,
-		sortConfig,
-		fetchTracks,
-	]);
+	}, []);
 
 	const handlePlay = (trackId: string) => {
 		if (currentPlayingId === trackId) {
@@ -140,13 +63,33 @@ const TrackList: React.FC<TrackListProps> = ({
 	};
 
 	const requestSort = (key: string) => {
-		setSortConfig({
-			key,
-			direction:
-				sortConfig.key === key && sortConfig.direction === "asc"
-					? "desc"
-					: "asc",
+		const direction =
+			sortConfig.key === key && sortConfig.direction === "asc" ? "desc" : "asc";
+		setSortConfig({ key, direction });
+		fetchTracks({
+			page: 1,
+			limit: paginationMeta.limit,
+			sort: key,
+			order: direction,
+			artist: filters.artist || undefined,
+			genre: filters.genre || undefined,
+			search: filters.search || undefined,
 		});
+		onPageChange(1);
+	};
+
+	const handleClearSort = () => {
+		setSortConfig({ key: null, direction: "asc" });
+		fetchTracks({
+			page: 1,
+			limit: paginationMeta.limit,
+			sort: undefined,
+			order: undefined,
+			artist: filters.artist || undefined,
+			genre: filters.genre || undefined,
+			search: filters.search || undefined,
+		});
+		onPageChange(1);
 	};
 
 	const handleFilterChange = (
@@ -154,12 +97,46 @@ const TrackList: React.FC<TrackListProps> = ({
 	) => {
 		const { name, value } = e.target;
 		setFilters((prev) => ({ ...prev, [name]: value }));
-		onPageChange(1);
+
+		if (name === "search" || name === "artist") {
+			debounce(() => {
+				fetchTracks({
+					page: 1,
+					limit: paginationMeta.limit,
+					sort: sortConfig.key ?? undefined,
+					order: sortConfig.direction,
+					artist: name === "artist" ? value : filters.artist || undefined,
+					genre: filters.genre || undefined,
+					search: name === "search" ? value : filters.search || undefined,
+				});
+				onPageChange(1);
+			}, 500);
+		} else {
+			fetchTracks({
+				page: 1,
+				limit: paginationMeta.limit,
+				sort: sortConfig.key ?? undefined,
+				order: sortConfig.direction,
+				artist: filters.artist || undefined,
+				genre: value || undefined,
+				search: filters.search || undefined,
+			});
+			onPageChange(1);
+		}
 	};
 
 	const handlePageChange = (newPage: number) => {
 		if (newPage !== paginationMeta.page) {
 			onPageChange(newPage);
+			fetchTracks({
+				page: newPage,
+				limit: paginationMeta.limit,
+				sort: sortConfig.key ?? undefined,
+				order: sortConfig.direction,
+				artist: filters.artist || undefined,
+				genre: filters.genre || undefined,
+				search: filters.search || undefined,
+			});
 		}
 	};
 
@@ -226,6 +203,15 @@ const TrackList: React.FC<TrackListProps> = ({
 					{sortConfig.key === "createdAt" &&
 						(sortConfig.direction === "asc" ? "↑" : "↓")}
 				</button>
+				{sortConfig.key && (
+					<button
+						type="button"
+						className="clear-sort-button"
+						onClick={handleClearSort}
+					>
+						Clear Sort
+					</button>
+				)}
 			</div>
 
 			{loading && (
@@ -242,9 +228,9 @@ const TrackList: React.FC<TrackListProps> = ({
 				<>
 					<ul className="tracks-list">
 						{tracks.map((track) => (
-							<li key={track.id || track.id} className="track-item">
+							<li key={track.id} className="track-item">
 								<img
-									src={track.coverImage || DEFAULT_COVER}
+									src={track.coverUrl || DEFAULT_COVER}
 									alt="cover"
 									className="track-cover"
 								/>
@@ -268,11 +254,6 @@ const TrackList: React.FC<TrackListProps> = ({
 													</span>
 												))}
 											</div>
-										)}
-										{track.genre && !track.genres && (
-											<p>
-												<strong>Genre:</strong> {track.genre}
-											</p>
 										)}
 
 										{track.audioFile && (

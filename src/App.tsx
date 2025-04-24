@@ -1,184 +1,86 @@
-import axios from "axios";
-import { useState, useEffect, useCallback } from "react";
-import Modal from "react-modal";
 import CreateTrackModal from "./components/Modal/CreateTrackModal";
 import EditTrackModal from "./components/Modal/EditTrackModal";
 import TrackList from "./components/TrackList/TrackList";
+import tracksApi from "./api/tracksApi";
+import { useTracks } from "./hooks/useTracks";
+import { useModals } from "./hooks/useModals";
+import { useTrackActions } from "./hooks/useTrackActions";
 import "./App.css";
-import {
-	API_BASE_URL,
-	AUDIO_FILE_TYPES,
-	DEFAULT_PAGINATION,
-	MAX_FILE_SIZE,
-} from "./config";
-
-Modal.setAppElement("#root");
-
-interface Track {
-	id: string;
-	title: string;
-	artist: string;
-	album?: string;
-	genre?: string;
-	genres?: string[];
-	coverImage?: string;
-	audioFile?: string;
-	createdAt?: string;
-}
-
-interface PaginationMeta {
-	page: number;
-	limit: number;
-	totalPages: number;
-}
+import type {
+	Track,
+	TrackFormData,
+	PaginationParams,
+} from "./types/track.types";
 
 export default function App() {
-	const [modalOpen, setModalOpen] = useState(false);
-	const [tracks, setTracks] = useState<Track[]>([]);
-	const [loading, setLoading] = useState(false);
-	const [error, setError] = useState<string | null>(null);
-	const [editTrack, setEditTrack] = useState<Track | null>(null);
-	const [paginationMeta, setPaginationMeta] =
-		useState<PaginationMeta>(DEFAULT_PAGINATION);
-	const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+	const {
+		tracks,
+		error,
+		paginationMeta,
+		fetchTracks,
+		handlePageChange,
+		addTrack,
+		updateTrack,
+		deleteTrack,
+		loading,
+	} = useTracks();
 
-	const fetchTracks = useCallback(
-		async (params: Record<string, string | number> = {}) => {
-			try {
-				setLoading(true);
-				const response = await axios.get(`${API_BASE_URL}/tracks`, {
-					params: {
-						page: paginationMeta.page,
-						limit: paginationMeta.limit,
-						...params,
-					},
-				});
+	const { modalOpen, setModalOpen, editTrack, setEditTrack } = useModals();
 
-				setTracks(response.data.data || []);
-				setPaginationMeta({
-					page: response.data.meta?.page || 1,
-					limit: response.data.meta?.limit || 5,
-					totalPages: response.data.meta?.totalPages || 1,
-				});
-				setInitialLoadComplete(true);
-			} catch (err: unknown) {
-				if (axios.isAxiosError(err)) {
-					setError(err.response?.data?.message || err.message);
-				} else {
-					setError(String(err));
-				}
-			} finally {
-				setLoading(false);
-			}
-		},
-		[paginationMeta.page, paginationMeta.limit]
-	);
+	const [, playerActions] = useTrackActions({
+		currentTrack: null,
+		playlist: null,
+		isPlaying: false,
+		volume: 50,
+		currentTime: 0,
+		duration: 0,
+	});
 
-	useEffect(() => {
-		if (!initialLoadComplete) {
-			fetchTracks();
-		}
-	}, [fetchTracks, initialLoadComplete]);
-
-	useEffect(() => {
-		if (error) {
-			const timeout = setTimeout(() => setError(null), 4000);
-			return () => clearTimeout(timeout);
-		}
-	}, [error]);
-
-	const handleSaveTrack = async (trackData: Omit<Track, "id">) => {
-		try {
-			await axios.post(`${API_BASE_URL}/tracks`, trackData, {
-				headers: { "Content-Type": "application/json" },
-			});
-			fetchTracks();
-			setModalOpen(false);
-		} catch (err: unknown) {
-			if (axios.isAxiosError(err)) {
-				setError(err.response?.data?.message || err.message);
-			} else {
-				setError(String(err));
-			}
-		}
+	const handleSaveTrack = (data: TrackFormData) => {
+		const newTrack: Track = {
+			id: Date.now().toString(),
+			title: data.title,
+			artist: data.artist,
+			album: data.album,
+			duration: data.duration || 0,
+			coverUrl: data.coverImage,
+			genres: data.genres || [],
+		};
+		addTrack(newTrack).then(() => {
+			playerActions.addToPlaylist(newTrack);
+			fetchTracks({ page: 1, limit: paginationMeta.limit });
+		});
 	};
 
-	const handleUpdateTrack = async (updatedTrack: Track) => {
-		try {
-			await axios.put(
-				`${API_BASE_URL}/tracks/${updatedTrack.id}`,
-				updatedTrack,
-				{ headers: { "Content-Type": "application/json" } }
-			);
-			fetchTracks();
-			setEditTrack(null);
-		} catch (err: unknown) {
-			if (axios.isAxiosError(err)) {
-				setError(err.response?.data?.message || err.message);
-			} else {
-				setError(String(err));
-			}
-		}
+	const handleDeleteTrack = (track: Track) => {
+		deleteTrack(track.id).then(() => {
+			playerActions.removeFromPlaylist(track.id);
+			fetchTracks({ page: paginationMeta.page, limit: paginationMeta.limit });
+		});
 	};
 
-	const handleDeleteTrack = async (track: Track) => {
-		if (!window.confirm(`Delete "${track.title}"?`)) return;
+	const handleUploadFile = async (track: Track, file: File) => {
 		try {
-			await axios.delete(`${API_BASE_URL}/tracks/${track.id}`);
-			fetchTracks();
-		} catch (err: unknown) {
-			if (axios.isAxiosError(err)) {
-				setError(err.response?.data?.message || err.message);
-			} else {
-				setError(String(err));
-			}
-		}
-	};
-
-	const handleUploadFile = async (track: Track, file: File | null) => {
-		if (!file) return;
-		if (!AUDIO_FILE_TYPES.includes(file.type)) {
-			alert("Only MP3 or WAV files are allowed");
-			return;
-		}
-		if (file.size > MAX_FILE_SIZE) {
-			alert("Max file size is 10MB");
-			return;
-		}
-
-		const formData = new FormData();
-		formData.append("file", file);
-
-		try {
-			await axios.post(`${API_BASE_URL}/tracks/${track.id}/upload`, formData, {
-				headers: { "Content-Type": "multipart/form-data" },
-			});
-			fetchTracks();
-		} catch (err: unknown) {
-			if (axios.isAxiosError(err)) {
-				setError(err.response?.data?.message || err.message);
-			} else {
-				setError(String(err));
-			}
+			const updatedTrack = await tracksApi.uploadAudio(track.id, file);
+			playerActions.addToPlaylist(updatedTrack);
+			fetchTracks({ page: paginationMeta.page, limit: paginationMeta.limit });
+		} catch (error) {
+			console.error("Error uploading audio:", error);
 		}
 	};
 
 	const handleRemoveFile = async (track: Track) => {
-		if (!window.confirm("Remove this audio file?")) return;
 		try {
-			await axios.delete(`${API_BASE_URL}/tracks/${track.id}/file`);
-			fetchTracks();
-		} catch (err: unknown) {
-			if (axios.isAxiosError(err)) {
-				setError(err.response?.data?.message || err.message);
-			} else {
-				setError(String(err));
-			}
+			const updatedTrack = await tracksApi.removeAudio(track.id);
+			playerActions.addToPlaylist(updatedTrack);
+			fetchTracks({ page: paginationMeta.page, limit: paginationMeta.limit });
+		} catch (error) {
+			console.error("Error removing audio:", error);
 		}
 	};
 
-	const handlePageChange = (page: number) => {
-		setPaginationMeta((prev) => ({ ...prev, page }));
+	const handleFetchTracks = (params: PaginationParams) => {
+		fetchTracks(params);
 	};
 
 	return (
@@ -192,25 +94,86 @@ export default function App() {
 					Create Track
 				</button>
 
+				{error && <div className="error-message">Помилка: {error}</div>}
+
 				<TrackList
 					tracks={tracks}
 					paginationMeta={paginationMeta}
-					onEdit={setEditTrack}
-					onDelete={handleDeleteTrack}
-					onUpload={handleUploadFile}
-					onRemoveFile={handleRemoveFile}
-					fetchTracks={fetchTracks}
-					onPageChange={handlePageChange}
-					initialLoading={loading && !initialLoadComplete}
-					error={error}
 					loading={loading}
+					error={error}
+					onEdit={(track) => {
+						const found = tracks.find((t) => t.id === track.id);
+						if (found) {
+							setEditTrack(found);
+						} else {
+							setEditTrack({
+								...track,
+								duration: track.duration ?? 0,
+								coverUrl: (track as Track).coverUrl ?? "",
+								genres: track.genres ?? [],
+							});
+						}
+					}}
+					onDelete={(track) => {
+						const found = tracks.find((t) => t.id === track.id);
+						if (found) {
+							handleDeleteTrack(found);
+						} else {
+							handleDeleteTrack({
+								...track,
+								duration: track.duration ?? 0,
+								coverUrl: (track as Track).coverUrl ?? "",
+								genres: track.genres ?? [],
+							});
+						}
+					}}
+					onUpload={(track, file) => {
+						const found = tracks.find((t) => t.id === track.id);
+						if (found) {
+							handleUploadFile(found, file);
+						} else {
+							handleUploadFile(
+								{
+									...track,
+									duration: track.duration ?? 0,
+									coverUrl: (track as Track).coverUrl ?? "",
+									genres: track.genres ?? [],
+								},
+								file
+							);
+						}
+					}}
+					onRemoveFile={(track) => {
+						const found = tracks.find((t) => t.id === track.id);
+						if (found) {
+							handleRemoveFile(found);
+						} else {
+							handleRemoveFile({
+								...track,
+								duration: track.duration ?? 0,
+								coverUrl: (track as Track).coverUrl ?? "",
+								genres: track.genres ?? [],
+							});
+						}
+					}}
+					fetchTracks={handleFetchTracks}
+					onPageChange={handlePageChange}
 				/>
 
 				<EditTrackModal
 					isOpen={!!editTrack}
 					onRequestClose={() => setEditTrack(null)}
 					track={editTrack}
-					onSave={handleUpdateTrack}
+					onSave={(updatedData) => {
+						const found = tracks.find((t) => t.id === updatedData.id);
+						if (found) {
+							// Only send mutable fields to updateTrack
+							const updatePayload = { ...updatedData };
+							updateTrack(updatedData.id, updatePayload).then(() => {
+								fetchTracks({ page: paginationMeta.page, limit: paginationMeta.limit });
+							});
+						}
+					}}
 				/>
 
 				<CreateTrackModal

@@ -160,14 +160,11 @@ select {
 }
 
 .error-message {
-	color: #dc3545;
-	font-size: 12px;
-	margin-top: -8px;
-	margin-bottom: 10px;
-	display: block;
-	margin-right: 30px;
+	color: #ff0000;
+	font-size: 0.8rem;
+	margin-top: 0.25rem;
 }
 
 .error-input {
-	border-color: #dc3545;
+	border-color: #ff0000;
 }
