@@ -25,7 +25,7 @@ export type TrackFormData = z.infer<typeof TrackSchema>;
 interface BaseTrackModalProps {
 	isOpen: boolean;
 	onRequestClose: () => void;
-	onSave: (data: TrackFormData) => void;
+	onSave: (data: TrackFormData) => Promise<void>; // ensure async
 	initialData?: Partial<TrackFormData>;
 	modalTitle?: string;
 	submitButtonText?: string;
@@ -72,6 +72,7 @@ const BaseTrackModal: React.FC<BaseTrackModalProps> = ({
 	const genres = watch("genres") || [];
 	const coverImage = watch("coverImage") || "";
 	const [newGenre, setNewGenre] = React.useState("");
+	const [submitError, setSubmitError] = React.useState<string | null>(null);
 
 	useEffect(() => {
 		if (isOpen) {
@@ -85,9 +86,18 @@ const BaseTrackModal: React.FC<BaseTrackModalProps> = ({
 		}
 	}, [isOpen, initialData, reset]);
 
-	const onSubmit: SubmitHandler<TrackFormData> = (data) => {
-		onSave(data);
-		onRequestClose();
+	const onSubmit: SubmitHandler<TrackFormData> = async (data) => {
+		setSubmitError(null);
+		try {
+			await onSave(data);
+			onRequestClose();
+		} catch (err: unknown) {
+			if (err instanceof Error) {
+				setSubmitError(err.message || "Failed to save track");
+			} else {
+				setSubmitError("Failed to save track");
+			}
+		}
 	};
 
 	const addGenre = () => {
@@ -224,6 +234,12 @@ const BaseTrackModal: React.FC<BaseTrackModalProps> = ({
 						}}
 					/>
 				</div>
+
+				{submitError && (
+					<div className="error-message" style={{ marginBottom: 10 }}>
+						{submitError}
+					</div>
+				)}
 
 				<div className="modal-actions">
 					<button type="button" className="cancel-btn" onClick={onRequestClose}>

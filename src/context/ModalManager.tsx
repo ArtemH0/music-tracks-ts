@@ -1,5 +1,5 @@
 import React from "react";
-import { useTrackContext } from "./TrackContext";
+import { useTrackContext } from "./useTrackContext";
 import CreateTrackModal from "../components/Modal/CreateTrackModal";
 import EditTrackModal from "../components/Modal/EditTrackModal";
 import type { TrackFormData } from "../types/track.types";
@@ -21,7 +21,7 @@ const ModalManager: React.FC = () => {
 			coverUrl: data.coverImage,
 		};
 		await addTrack(newTrack);
-		setModalOpen(false);
+		 // Do not close modal here
 	};
 
 	const handleUpdateTrack = async (updatedData: TrackFormData) => {
@@ -31,6 +31,7 @@ const ModalManager: React.FC = () => {
 				coverUrl: updatedData.coverImage,
 			});
 			setEditTrack(null);
+			// Do not close modal here
 		}
 	};
 

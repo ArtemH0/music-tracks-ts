@@ -1,5 +1,5 @@
 import React from "react";
-import { TrackProvider } from "./context/TrackContext";
+import { TrackProvider } from "./context/TrackContextProvider";
 import TrackManager from "./context/TrackManager";
 import "./App.css";
 

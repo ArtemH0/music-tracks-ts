@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import BaseTrackModal from "./BaseTrackModal";
-import type { TrackFormData } from "./BaseTrackModal";
+import { TrackFormData } from "./BaseTrackModal";
 
 interface CreateTrackModalProps {
 	isOpen: boolean;
