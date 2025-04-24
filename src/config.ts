@@ -4,22 +4,6 @@ export const DEFAULT_COVER: string = import.meta.env.VITE_DEFAULT_COVER ?? '';
 export const DEFAULT_COVER_PLACEHOLDER: string = import.meta.env.VITE_DEFAULT_COVER_PLACEHOLDER ?? '';
 
 
-export const GENRES = [
-  "Rock",
-  "Pop",
-  "Hip Hop",
-  "Jazz",
-  "Classical",
-  "Electronic",
-  "R&B",
-  "Country",
-  "Folk",
-  "Reggae",
-  "Metal",
-  "Blues",
-  "Indie",
-];
-
 export const AUDIO_FILE_TYPES = ["audio/mpeg", "audio/wav"];
 export const MAX_FILE_SIZE = 10 * 1024 * 1024;
 export const DEFAULT_PAGINATION = {

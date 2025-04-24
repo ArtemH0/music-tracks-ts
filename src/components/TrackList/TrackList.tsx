@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect, useCallback } from "react";
 import { useTrackContext } from "../../context/useTrackContext";
 import ModalManager from "../../context/ModalManager";
 import "./TrackList.css";
-import { DEFAULT_COVER, FILES_BASE_URL, GENRES } from "../../config";
+import { DEFAULT_COVER, FILES_BASE_URL } from "../../config";
 
 const TrackList: React.FC = () => {
 	const {
@@ -15,6 +15,7 @@ const TrackList: React.FC = () => {
 		uploadAudio,
 		removeAudio,
 		setModalOpen,
+		genres,
 	} = useTrackContext();
 
 	const audioRefs = useRef<Record<string, HTMLAudioElement | null>>({});
@@ -146,7 +147,7 @@ const TrackList: React.FC = () => {
 	);
 
 	return (
-		<div className="track-list-container">
+		<div className="track-list-container" data-testid="tracks-header">
 			<h2>Track List</h2>
 
 			<button
@@ -154,6 +155,7 @@ const TrackList: React.FC = () => {
 				className="blue-button"
 				onClick={() => setModalOpen(true)}
 				style={{ marginBottom: "16px" }}
+				data-testid="create-track-button"
 			>
 				Create Track
 			</button>
@@ -166,6 +168,7 @@ const TrackList: React.FC = () => {
 						name="search"
 						value={filters.search}
 						onChange={handleFilterChange}
+						data-testid="search-input"
 					/>
 				</form>
 
@@ -176,6 +179,7 @@ const TrackList: React.FC = () => {
 						name="artist"
 						value={filters.artist}
 						onChange={handleFilterChange}
+						data-testid="filter-artist"
 					/>
 				</form>
 
@@ -185,9 +189,10 @@ const TrackList: React.FC = () => {
 						value={filters.genre}
 						onChange={handleFilterChange}
 						className="genre-select"
+						data-testid="filter-genre"
 					>
 						<option value="">All Genres</option>
-						{GENRES.map((genre) => (
+						{genres.map((genre) => (
 							<option key={genre} value={genre}>
 								{genre}
 							</option>
@@ -196,7 +201,7 @@ const TrackList: React.FC = () => {
 				</form>
 			</div>
 
-			<div className="sort-controls">
+			<div className="sort-controls" data-testid="sort-select">
 				<button type="button" onClick={() => requestSort("title")}>
 					Sort by Title{" "}
 					{sortConfig.key === "title" &&
@@ -229,10 +234,13 @@ const TrackList: React.FC = () => {
 			</div>
 
 			{loading && (
-				<div className="loading-container">
+				<div className="loading-container" data-testid="loading-tracks">
 					<div className="loading-spinner">
-						<div className="spinner-sector spinner-sector-blue" />
-						<div className="spinner-sector spinner-sector-white" />
+						<div className="dot-bounce-loader">
+							<div className="dot"></div>
+							<div className="dot"></div>
+							<div className="dot"></div>
+						</div>
 					</div>
 					<p>Loading tracks...</p>
 				</div>
@@ -251,11 +259,14 @@ const TrackList: React.FC = () => {
 										(e.target as HTMLImageElement).src = DEFAULT_COVER;
 									}}
 								/>
-								<div className="track-content">
+								<div className="track-content" data-testid="track-item-{id}">
 									<div className="track-info">
-										<h3>{track.title}</h3>
+										<h3 data-testid="track-item-{id}-title">{track.title}</h3>
 										<p>
-											<strong>Artist:</strong> {track.artist}
+											<strong data-testid="track-item-{id}-artist">
+												Artist:
+											</strong>{" "}
+											{track.artist}
 										</p>
 										{track.album && (
 											<p>
@@ -300,6 +311,7 @@ const TrackList: React.FC = () => {
 														uploadAudio(track.id, e.target.files?.[0] as File)
 													}
 													hidden
+													data-testid="upload-track-{id}"
 												/>
 											</label>
 											{track.audioFile && (
@@ -319,6 +331,7 @@ const TrackList: React.FC = () => {
 											type="button"
 											className="edit-button"
 											onClick={() => setEditTrack(track)}
+											data-testid="edit-track-{id}"
 										>
 											Edit
 										</button>
@@ -326,6 +339,7 @@ const TrackList: React.FC = () => {
 											type="button"
 											className="delete-button"
 											onClick={() => deleteTrack(track.id)}
+											data-testid="delete-track-{id}"
 										>
 											Delete
 										</button>
@@ -335,11 +349,12 @@ const TrackList: React.FC = () => {
 						))}
 					</ul>
 
-					<div className="pagination">
+					<div className="pagination" data-testid="pagination">
 						<button
 							type="button"
 							onClick={() => handlePageChange(paginationMeta.page - 1)}
 							disabled={paginationMeta.page === 1}
+							data-testid="pagination-prev"
 						>
 							Previous
 						</button>
@@ -350,6 +365,7 @@ const TrackList: React.FC = () => {
 							type="button"
 							onClick={() => handlePageChange(paginationMeta.page + 1)}
 							disabled={paginationMeta.page === paginationMeta.totalPages}
+							data-testid="pagination-next"
 						>
 							Next
 						</button>

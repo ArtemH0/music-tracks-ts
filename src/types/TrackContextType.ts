@@ -15,4 +15,5 @@ export interface TrackContextType {
 	setEditTrack: (track: Track | null) => void;
 	modalOpen: boolean;
 	setModalOpen: (isOpen: boolean) => void;
+	genres: string[];
 }

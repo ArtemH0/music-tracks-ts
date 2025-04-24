@@ -3,14 +3,14 @@ import Modal from "react-modal";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { DEFAULT_COVER_PLACEHOLDER, GENRES } from "../../config";
+import { DEFAULT_COVER_PLACEHOLDER } from "../../config";
 import "./CreateTrackModal.css";
 
 const TrackSchema = z.object({
 	title: z.string().min(1, "Title is required"),
 	artist: z.string().min(1, "Artist is required"),
 	album: z.string().transform((val) => val || ""),
-	genres: z.array(z.string()).transform((val) => val || []),
+	genres: z.array(z.string()).min(1, "At least one genre is required"),
 	coverImage: z
 		.string()
 		.transform((val) => val || "")
@@ -25,7 +25,7 @@ export type TrackFormData = z.infer<typeof TrackSchema>;
 interface BaseTrackModalProps {
 	isOpen: boolean;
 	onRequestClose: () => void;
-	onSave: (data: TrackFormData) => Promise<void>; // ensure async
+	onSave: (data: TrackFormData) => Promise<void>;
 	initialData?: Partial<TrackFormData>;
 	modalTitle?: string;
 	submitButtonText?: string;
@@ -34,6 +34,7 @@ interface BaseTrackModalProps {
 		artist?: string;
 		coverImage?: string;
 	};
+	genres: string[];
 }
 
 const BaseTrackModal: React.FC<BaseTrackModalProps> = ({
@@ -50,6 +51,7 @@ const BaseTrackModal: React.FC<BaseTrackModalProps> = ({
 	modalTitle = "Track",
 	submitButtonText = "Save",
 	externalErrors = {},
+	genres,
 }) => {
 	const {
 		register,
@@ -69,7 +71,7 @@ const BaseTrackModal: React.FC<BaseTrackModalProps> = ({
 		},
 	});
 
-	const genres = watch("genres") || [];
+	const genresState = watch("genres") || [];
 	const coverImage = watch("coverImage") || "";
 	const [newGenre, setNewGenre] = React.useState("");
 	const [submitError, setSubmitError] = React.useState<string | null>(null);
@@ -101,8 +103,8 @@ const BaseTrackModal: React.FC<BaseTrackModalProps> = ({
 	};
 
 	const addGenre = () => {
-		if (newGenre && !genres.includes(newGenre)) {
-			setValue("genres", [...genres, newGenre]);
+		if (newGenre && !genresState.includes(newGenre)) {
+			setValue("genres", [...genresState, newGenre], { shouldValidate: true });
 			setNewGenre("");
 		}
 	};
@@ -110,13 +112,15 @@ const BaseTrackModal: React.FC<BaseTrackModalProps> = ({
 	const removeGenre = (genreToRemove: string) => {
 		setValue(
 			"genres",
-			genres.filter((genre) => genre !== genreToRemove)
+			genresState.filter((genre) => genre !== genreToRemove),
+			{ shouldValidate: true }
 		);
 	};
 
 	const allErrors = {
 		title: externalErrors.title || errors.title?.message,
 		artist: externalErrors.artist || errors.artist?.message,
+		genres: errors.genres?.message,
 		coverImage: externalErrors.coverImage || errors.coverImage?.message,
 	};
 
@@ -128,7 +132,11 @@ const BaseTrackModal: React.FC<BaseTrackModalProps> = ({
 			overlayClassName="overlay"
 			ariaHideApp={false}
 		>
-			<form onSubmit={handleSubmit(onSubmit)} className="modal-body">
+			<form
+				onSubmit={handleSubmit(onSubmit)}
+				className="modal-body"
+				data-testid="track-form"
+			>
 				<h2>{modalTitle}</h2>
 
 				<div className="form-group">
@@ -138,9 +146,12 @@ const BaseTrackModal: React.FC<BaseTrackModalProps> = ({
 						{...register("title")}
 						className={allErrors.title ? "error-input" : ""}
 						placeholder="Enter track title"
+						data-testid="input-title"
 					/>
 					{allErrors.title && (
-						<span className="error-message">{allErrors.title}</span>
+						<span className="error-message" data-testid="error-title">
+							{allErrors.title}
+						</span>
 					)}
 				</div>
 
@@ -151,9 +162,12 @@ const BaseTrackModal: React.FC<BaseTrackModalProps> = ({
 						{...register("artist")}
 						className={allErrors.artist ? "error-input" : ""}
 						placeholder="Enter artist name"
+						data-testid="input-artist"
 					/>
 					{allErrors.artist && (
-						<span className="error-message">{allErrors.artist}</span>
+						<span className="error-message" data-testid="error-artist">
+							{allErrors.artist}
+						</span>
 					)}
 				</div>
 
@@ -163,13 +177,14 @@ const BaseTrackModal: React.FC<BaseTrackModalProps> = ({
 						id="track-album"
 						{...register("album")}
 						placeholder="Enter album name (optional)"
+						data-testid="input-album"
 					/>
 				</div>
 
 				<div className="form-group">
-					<label htmlFor="genre-select">Genres</label>
+					<label htmlFor="genre-select">Genres *</label>
 					<div className="genre-tags-container">
-						{genres.map((genre) => (
+						{genresState.map((genre) => (
 							<span key={genre} className="genre-tag">
 								{genre}
 								<button
@@ -182,19 +197,27 @@ const BaseTrackModal: React.FC<BaseTrackModalProps> = ({
 							</span>
 						))}
 					</div>
+					{allErrors.genres && (
+						<span className="error-message" data-testid="error-genre">
+							{allErrors.genres}
+						</span>
+					)}
 					<div className="genre-selector">
 						<select
 							id="genre-select"
 							value={newGenre}
 							onChange={(e) => setNewGenre(e.target.value)}
 							className="genre-dropdown"
+							data-testid="genre-selector"
 						>
 							<option value="">Select a genre</option>
-							{GENRES.filter((g) => !genres.includes(g)).map((genre) => (
-								<option key={genre} value={genre}>
-									{genre}
-								</option>
-							))}
+							{genres
+								.filter((g) => !genresState.includes(g))
+								.map((genre) => (
+									<option key={genre} value={genre}>
+										{genre}
+									</option>
+								))}
 						</select>
 						<button
 							type="button"
@@ -215,9 +238,12 @@ const BaseTrackModal: React.FC<BaseTrackModalProps> = ({
 						{...register("coverImage")}
 						className={allErrors.coverImage ? "error-input" : ""}
 						placeholder="https://example.com/cover.jpg"
+						data-testid="input-cover-image"
 					/>
 					{allErrors.coverImage && (
-						<span className="error-message">{allErrors.coverImage}</span>
+						<span className="error-message" data-testid="error-cover-image">
+							{allErrors.coverImage}
+						</span>
 					)}
 				</div>
 
@@ -245,7 +271,11 @@ const BaseTrackModal: React.FC<BaseTrackModalProps> = ({
 					<button type="button" className="cancel-btn" onClick={onRequestClose}>
 						Cancel
 					</button>
-					<button type="submit" className="save-btn">
+					<button
+						type="submit"
+						className="save-btn"
+						data-testid="submit-button"
+					>
 						{submitButtonText}
 					</button>
 				</div>

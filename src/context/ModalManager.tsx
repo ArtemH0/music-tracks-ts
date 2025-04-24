@@ -1,4 +1,3 @@
-import React from "react";
 import { useTrackContext } from "./useTrackContext";
 import CreateTrackModal from "../components/Modal/CreateTrackModal";
 import EditTrackModal from "../components/Modal/EditTrackModal";
@@ -14,6 +13,7 @@ const ModalManager: React.FC = () => {
 		updateTrack,
 		fetchTracks,
 		paginationMeta,
+		genres, 
 	} = useTrackContext();
 
 	const handleSaveTrack = async (data: TrackFormData) => {
@@ -58,6 +58,7 @@ const ModalManager: React.FC = () => {
 				isOpen={modalOpen}
 				onRequestClose={() => setModalOpen(false)}
 				onSave={handleSaveTrack}
+				genres={genres}
 			/>
 
 			<EditTrackModal
@@ -65,6 +66,7 @@ const ModalManager: React.FC = () => {
 				onRequestClose={() => setEditTrack(null)}
 				track={editTrack}
 				onSave={handleUpdateTrack}
+				genres={genres}
 			/>
 		</>
 	);

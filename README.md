@@ -1,54 +1,114 @@
-# React + TypeScript + Vite
+# 🎵 Music Tracks Manager
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern React + TypeScript application powered by Vite for managing music tracks. This project uses powerful libraries such as React Hook Form, Zod, Axios, and React Modal to build an efficient and user-friendly UI.
 
-Currently, two official plugins are available:
+## 🚀 Getting Started
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### Prerequisites
 
-## Expanding the ESLint configuration
+Make sure you have the following installed:
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- [Node.js](https://nodejs.org/) (v18+ recommended)
+- [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+### Installation
+
+Install dependencies:
+
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Running the Development Server
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+```bash
+npm run dev
 ```
+
+This will start the Vite development server. Visit `http://localhost:3000` in your browser.
+
+### Building for Production
+
+```bash
+npm run build
+```
+
+This will type-check the project and build optimized static files using Vite.
+
+### Preview Production Build
+
+```bash
+npm run preview
+```
+
+This starts a local preview server to test your production build.
+
+### Linting
+
+```bash
+npm run lint
+```
+
+Runs ESLint to check for code issues and ensure style consistency.
+
+---
+
+.env file exists 
+Can tune environment variables in it
+
+## 🧩 Libraries & Usage
+
+### `react` & `react-dom`
+The core UI library for building the user interface.
+
+### `vite`
+A fast build tool that serves the app in development and bundles it for production.
+
+### `typescript`
+Used for type safety and enhanced developer experience.
+
+### `react-hook-form`
+A performant form management library for React. It's used to manage form state, validation, and submission.
+
+### `@hookform/resolvers`
+Provides schema validation support for `react-hook-form`. Used alongside Zod for type-safe validation.
+
+### `zod`
+Schema validation library for TypeScript. Used to define and validate form schemas in a type-safe manner.
+
+### `axios`
+Promise-based HTTP client used for fetching and sending data to the backend API (e.g., for track metadata and audio file upload).
+
+### `react-modal`
+Accessible modal component used for forms like “Create Track” and “Edit Track”.
+
+---
+
+## 🛠 Development Tools
+
+### `eslint` + `eslint-plugin-react-hooks`
+Used to maintain code quality and enforce best practices for hooks and general JavaScript/TypeScript code.
+
+### `@vitejs/plugin-react`
+Adds React Fast Refresh and JSX transform support for Vite.
+
+### `@types/*`
+Type definitions for React, Node, and other libraries to enable full TypeScript support.
+
+---
+
+## 📁 Project Structure (simplified)
+
+```
+src/ 
+├── api/ # API requests and service functions using Axios 
+├── components/ # Reusable UI components (buttons, modals, forms, etc.) 
+├── contex/ # React context for global state management 
+├── hooks/ # Custom reusable React hooks  
+├── types/ # Global TypeScript types and interfaces 
+├── utils/ # Utility functions and helpers 
+├── App.tsx # Main application component 
+└── main.tsx # Entry point for rendering ReactDOM
+```
+
+

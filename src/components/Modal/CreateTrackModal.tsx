@@ -6,12 +6,14 @@ interface CreateTrackModalProps {
 	isOpen: boolean;
 	onRequestClose: () => void;
 	onSave: (data: TrackFormData) => Promise<void>;
+	genres: string[];
 }
 
 const CreateTrackModal: React.FC<CreateTrackModalProps> = ({
 	isOpen,
 	onRequestClose,
 	onSave,
+	genres,
 }) => {
 	const initialData = useMemo(
 		() => ({
@@ -32,6 +34,7 @@ const CreateTrackModal: React.FC<CreateTrackModalProps> = ({
 			initialData={initialData}
 			modalTitle="Create New Track"
 			submitButtonText="Save Track"
+			genres={genres}
 		/>
 	);
 };

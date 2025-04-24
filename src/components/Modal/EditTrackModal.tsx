@@ -8,6 +8,7 @@ interface EditTrackModalProps {
 	onRequestClose: () => void;
 	onSave: (data: TrackFormData) => Promise<void>;
 	track: Track | null;
+	genres: string[]; 
 }
 
 const EditTrackModal: React.FC<EditTrackModalProps> = ({
@@ -15,6 +16,7 @@ const EditTrackModal: React.FC<EditTrackModalProps> = ({
 	onRequestClose,
 	onSave,
 	track,
+	genres, 
 }) => {
 	const initialData = useMemo(
 		() =>
@@ -44,6 +46,7 @@ const EditTrackModal: React.FC<EditTrackModalProps> = ({
 			initialData={initialData}
 			modalTitle="Edit Track"
 			submitButtonText="Save Changes"
+			genres={genres} //
 		/>
 	);
 };

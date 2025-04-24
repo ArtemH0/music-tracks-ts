@@ -88,13 +88,17 @@ export const useTracks = () => {
 			setLoading(true);
 			await tracksApi.deleteTrack(id);
 			setTracks((prev) => prev.filter((track) => track.id !== id));
+			fetchTracks({ 
+    page: paginationMeta.page, 
+    limit: paginationMeta.limit 
+  });
 		} catch (err) {
 			setError(err instanceof Error ? err.message : "Failed to delete track");
 			throw err;
 		} finally {
 			setLoading(false);
 		}
-	}, []);
+	}, [fetchTracks, paginationMeta.limit, paginationMeta.page]);
 
 	// Only fetch once on mount
 	useEffect(() => {

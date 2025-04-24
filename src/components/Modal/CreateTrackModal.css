@@ -28,8 +28,8 @@
 }
 
 .form-group {
-	margin-bottom: 15px;
-	margin-right: 20px;
+	margin-bottom: 25px;
+	margin-right: 20px;;
 }
 
 .form-group label {
@@ -79,6 +79,7 @@ select {
 .genre-selector {
 	display: flex;
 	gap: 8px;
+	margin-top: 20px;
 }
 
 .genre-dropdown {
@@ -171,7 +172,7 @@ select {
 .error-message {
 	color: #ff0000;
 	font-size: 0.8rem;
-	margin-top: 0.25rem;
+	margin-top: 025rem;
 }
 
 .error-input {
