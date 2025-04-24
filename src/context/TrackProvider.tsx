@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { TrackContext } from "./TrackContext";
+import type { TrackContextType } from "../types/TrackContextType";
+import tracksApi from "../api/tracksApi";
 import { useTracks } from "../hooks/useTracks";
-import { uploadAudio, removeAudio } from "../utils/trackUtils";
-import type { Track } from "../types/track.types";
+import type { Track } from "../types/track.types"; 
+
 
 export const TrackProvider: React.FC<{ children: React.ReactNode }> = ({
 	children,
@@ -17,11 +19,22 @@ export const TrackProvider: React.FC<{ children: React.ReactNode }> = ({
 		updateTrack,
 		deleteTrack,
 	} = useTracks();
-
 	const [editTrack, setEditTrack] = useState<Track | null>(null);
 	const [modalOpen, setModalOpen] = useState(false);
 
-	const value = {
+	const uploadAudio = async (trackId: string, file: File) => {
+		const updatedTrack = await tracksApi.uploadAudio(trackId, file);
+		fetchTracks({ page: paginationMeta.page, limit: paginationMeta.limit });
+		return updatedTrack;
+	};
+
+	const removeAudio = async (trackId: string) => {
+		const updatedTrack = await tracksApi.removeAudio(trackId);
+		fetchTracks({ page: paginationMeta.page, limit: paginationMeta.limit });
+		return updatedTrack;
+	};
+
+	const value: TrackContextType = {
 		tracks,
 		loading,
 		error,
@@ -30,10 +43,8 @@ export const TrackProvider: React.FC<{ children: React.ReactNode }> = ({
 		addTrack,
 		updateTrack,
 		deleteTrack,
-		uploadAudio: (trackId: string, file: File) =>
-			uploadAudio(trackId, file, fetchTracks, paginationMeta),
-		removeAudio: (trackId: string) =>
-			removeAudio(trackId, fetchTracks, paginationMeta),
+		uploadAudio,
+		removeAudio,
 		editTrack,
 		setEditTrack,
 		modalOpen,

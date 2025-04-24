@@ -1,8 +1,8 @@
 import React, { useRef, useState, useEffect, useCallback } from "react";
 import { useTrackContext } from "../../context/useTrackContext";
+import ModalManager from "../../context/ModalManager";
 import "./TrackList.css";
 import { DEFAULT_COVER, FILES_BASE_URL, GENRES } from "../../config";
-import type { Track } from "../../types/track.types";
 
 const TrackList: React.FC = () => {
 	const {
@@ -20,10 +20,10 @@ const TrackList: React.FC = () => {
 	const audioRefs = useRef<Record<string, HTMLAudioElement | null>>({});
 	const [currentPlayingId, setCurrentPlayingId] = useState<string | null>(null);
 	const [sortConfig, setSortConfig] = useState<{
-		key: string | null;
+		key: string | undefined;
 		direction: "asc" | "desc";
 	}>({
-		key: null,
+		key: undefined,
 		direction: "asc",
 	});
 	const [filters, setFilters] = useState<{
@@ -57,7 +57,7 @@ const TrackList: React.FC = () => {
 			audioRefs.current[trackId]?.pause();
 			setCurrentPlayingId(null);
 		} else {
-			if (currentPlayingId && audioRefs.current[currentPlayingId]) {
+			if (currentPlayingId) {
 				audioRefs.current[currentPlayingId]?.pause();
 			}
 			setCurrentPlayingId(trackId);
@@ -74,22 +74,20 @@ const TrackList: React.FC = () => {
 			limit: paginationMeta.limit,
 			sort: key,
 			order: direction,
-			artist: filters.artist || undefined,
-			genre: filters.genre || undefined,
-			search: filters.search || undefined,
+			artist: filters.artist,
+			genre: filters.genre,
+			search: filters.search,
 		});
 	};
 
 	const handleClearSort = () => {
-		setSortConfig({ key: null, direction: "asc" });
+		setSortConfig({ key: undefined, direction: "asc" });
 		fetchTracks({
 			page: 1,
 			limit: paginationMeta.limit,
-			sort: undefined,
-			order: undefined,
-			artist: filters.artist || undefined,
-			genre: filters.genre || undefined,
-			search: filters.search || undefined,
+			artist: filters.artist,
+			genre: filters.genre,
+			search: filters.search,
 		});
 	};
 
@@ -104,22 +102,22 @@ const TrackList: React.FC = () => {
 				fetchTracks({
 					page: 1,
 					limit: paginationMeta.limit,
-					sort: sortConfig.key ?? undefined,
+					sort: sortConfig.key,
 					order: sortConfig.direction,
-					artist: name === "artist" ? value : filters.artist || undefined,
-					genre: filters.genre || undefined,
-					search: name === "search" ? value : filters.search || undefined,
+					artist: name === "artist" ? value : filters.artist,
+					genre: filters.genre,
+					search: name === "search" ? value : filters.search,
 				});
 			}, 500);
 		} else {
 			fetchTracks({
 				page: 1,
 				limit: paginationMeta.limit,
-				sort: sortConfig.key ?? undefined,
+				sort: sortConfig.key,
 				order: sortConfig.direction,
-				artist: filters.artist || undefined,
-				genre: value || undefined,
-				search: filters.search || undefined,
+				artist: filters.artist,
+				genre: value,
+				search: filters.search,
 			});
 		}
 	};
@@ -129,23 +127,33 @@ const TrackList: React.FC = () => {
 			fetchTracks({
 				page: newPage,
 				limit: paginationMeta.limit,
-				sort: sortConfig.key ?? undefined,
+				sort: sortConfig.key,
 				order: sortConfig.direction,
-				artist: filters.artist || undefined,
-				genre: filters.genre || undefined,
-				search: filters.search || undefined,
+				artist: filters.artist,
+				genre: filters.genre,
+				search: filters.search,
 			});
 		}
 	};
 
+	const handleAudioRef = useCallback(
+		(el: HTMLAudioElement | null, trackId: string) => {
+			if (el) {
+				audioRefs.current[trackId] = el;
+			}
+		},
+		[]
+	);
+
 	return (
 		<div className="track-list-container">
 			<h2>Track List</h2>
+
 			<button
 				type="button"
 				className="blue-button"
 				onClick={() => setModalOpen(true)}
-				style={{ marginBottom: 16 }}
+				style={{ marginBottom: "16px" }}
 			>
 				Create Track
 			</button>
@@ -179,7 +187,7 @@ const TrackList: React.FC = () => {
 						className="genre-select"
 					>
 						<option value="">All Genres</option>
-						{GENRES.map((genre: string) => (
+						{GENRES.map((genre) => (
 							<option key={genre} value={genre}>
 								{genre}
 							</option>
@@ -233,7 +241,7 @@ const TrackList: React.FC = () => {
 			{!loading && (
 				<>
 					<ul className="tracks-list">
-						{tracks.map((track: Track) => (
+						{tracks.map((track) => (
 							<li key={track.id} className="track-item">
 								<img
 									src={track.coverUrl || DEFAULT_COVER}
@@ -254,10 +262,10 @@ const TrackList: React.FC = () => {
 												<strong>Album:</strong> {track.album}
 											</p>
 										)}
-										{(track.genres ?? []).length > 0 && (
+										{track.genres?.length > 0 && (
 											<div className="track-genres">
 												<strong>Genres: </strong>
-												{(track.genres ?? []).map((genre: string) => (
+												{track.genres.map((genre) => (
 													<span key={genre} className="genre-tag">
 														{genre}
 													</span>
@@ -268,9 +276,7 @@ const TrackList: React.FC = () => {
 										{track.audioFile && (
 											<audio
 												ref={(el) => {
-													if (track.id) {
-														audioRefs.current[track.id] = el;
-													}
+													if (track.id) handleAudioRef(el, track.id);
 												}}
 												controls
 												className="audio-player"
@@ -350,6 +356,8 @@ const TrackList: React.FC = () => {
 					</div>
 				</>
 			)}
+
+			<ModalManager />
 		</div>
 	);
 };

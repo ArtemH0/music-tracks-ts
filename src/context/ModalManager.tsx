@@ -12,26 +12,43 @@ const ModalManager: React.FC = () => {
 		setEditTrack,
 		addTrack,
 		updateTrack,
+		fetchTracks,
+		paginationMeta,
 	} = useTrackContext();
 
 	const handleSaveTrack = async (data: TrackFormData) => {
-		const newTrack = {
-			...data,
-			duration: 0,
-			coverUrl: data.coverImage,
-		};
-		await addTrack(newTrack);
-		 // Do not close modal here
+		try {
+			const newTrack = {
+				...data,
+				duration: 0,
+				coverUrl: data.coverImage,
+			};
+			await addTrack(newTrack);
+			await fetchTracks({
+				page: paginationMeta.page,
+				limit: paginationMeta.limit,
+			});
+			setModalOpen(false);
+		} catch (error) {
+			console.error("Error saving track:", error);
+		}
 	};
 
 	const handleUpdateTrack = async (updatedData: TrackFormData) => {
 		if (editTrack) {
-			await updateTrack(editTrack.id, {
-				...updatedData,
-				coverUrl: updatedData.coverImage,
-			});
-			setEditTrack(null);
-			// Do not close modal here
+			try {
+				await updateTrack(editTrack.id, {
+					...updatedData,
+					coverUrl: updatedData.coverImage,
+				});
+				await fetchTracks({
+					page: paginationMeta.page,
+					limit: paginationMeta.limit,
+				});
+				setEditTrack(null);
+			} catch (error) {
+				console.error("Error updating track:", error);
+			}
 		}
 	};
 
