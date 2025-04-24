@@ -1,19 +1,22 @@
 import React, { useRef, useState, useEffect, useCallback } from "react";
+import { useTrackContext } from "../../context/TrackContext";
 import "./TrackList.css";
 import { DEFAULT_COVER, FILES_BASE_URL, GENRES } from "../../config";
-import type { TrackListProps } from "../../types/track.types";
+import type { Track } from "../../types/track.types";
 
-const TrackList: React.FC<TrackListProps> = ({
-	tracks,
-	paginationMeta,
-	onEdit,
-	onDelete,
-	onUpload,
-	onRemoveFile,
-	fetchTracks,
-	onPageChange,
-	loading,
-}) => {
+const TrackList: React.FC = () => {
+	const {
+		tracks,
+		loading,
+		paginationMeta,
+		fetchTracks,
+		setEditTrack,
+		deleteTrack,
+		uploadAudio,
+		removeAudio,
+		setModalOpen,
+	} = useTrackContext();
+
 	const audioRefs = useRef<Record<string, HTMLAudioElement | null>>({});
 	const [currentPlayingId, setCurrentPlayingId] = useState<string | null>(null);
 	const [sortConfig, setSortConfig] = useState<{
@@ -75,7 +78,6 @@ const TrackList: React.FC<TrackListProps> = ({
 			genre: filters.genre || undefined,
 			search: filters.search || undefined,
 		});
-		onPageChange(1);
 	};
 
 	const handleClearSort = () => {
@@ -89,7 +91,6 @@ const TrackList: React.FC<TrackListProps> = ({
 			genre: filters.genre || undefined,
 			search: filters.search || undefined,
 		});
-		onPageChange(1);
 	};
 
 	const handleFilterChange = (
@@ -109,7 +110,6 @@ const TrackList: React.FC<TrackListProps> = ({
 					genre: filters.genre || undefined,
 					search: name === "search" ? value : filters.search || undefined,
 				});
-				onPageChange(1);
 			}, 500);
 		} else {
 			fetchTracks({
@@ -121,13 +121,11 @@ const TrackList: React.FC<TrackListProps> = ({
 				genre: value || undefined,
 				search: filters.search || undefined,
 			});
-			onPageChange(1);
 		}
 	};
 
 	const handlePageChange = (newPage: number) => {
 		if (newPage !== paginationMeta.page) {
-			onPageChange(newPage);
 			fetchTracks({
 				page: newPage,
 				limit: paginationMeta.limit,
@@ -143,6 +141,14 @@ const TrackList: React.FC<TrackListProps> = ({
 	return (
 		<div className="track-list-container">
 			<h2>Track List</h2>
+			<button
+				type="button"
+				className="blue-button"
+				onClick={() => setModalOpen(true)}
+				style={{ marginBottom: 16 }}
+			>
+				Create Track
+			</button>
 
 			<div className="search-forms">
 				<form onSubmit={(e) => e.preventDefault()}>
@@ -173,7 +179,7 @@ const TrackList: React.FC<TrackListProps> = ({
 						className="genre-select"
 					>
 						<option value="">All Genres</option>
-						{GENRES.map((genre) => (
+						{GENRES.map((genre: string) => (
 							<option key={genre} value={genre}>
 								{genre}
 							</option>
@@ -227,12 +233,15 @@ const TrackList: React.FC<TrackListProps> = ({
 			{!loading && (
 				<>
 					<ul className="tracks-list">
-						{tracks.map((track) => (
+						{tracks.map((track: Track) => (
 							<li key={track.id} className="track-item">
 								<img
 									src={track.coverUrl || DEFAULT_COVER}
 									alt="cover"
 									className="track-cover"
+									onError={(e) => {
+										(e.target as HTMLImageElement).src = DEFAULT_COVER;
+									}}
 								/>
 								<div className="track-content">
 									<div className="track-info">
@@ -248,7 +257,7 @@ const TrackList: React.FC<TrackListProps> = ({
 										{(track.genres ?? []).length > 0 && (
 											<div className="track-genres">
 												<strong>Genres: </strong>
-												{(track.genres ?? []).map((genre) => (
+												{(track.genres ?? []).map((genre: string) => (
 													<span key={genre} className="genre-tag">
 														{genre}
 													</span>
@@ -271,6 +280,7 @@ const TrackList: React.FC<TrackListProps> = ({
 													src={`${FILES_BASE_URL}/${track.audioFile}`}
 													type="audio/mpeg"
 												/>
+												Your browser does not support the audio element.
 											</audio>
 										)}
 
@@ -281,7 +291,7 @@ const TrackList: React.FC<TrackListProps> = ({
 													type="file"
 													accept=".mp3,.wav"
 													onChange={(e) =>
-														onUpload(track, e.target.files?.[0] as File)
+														uploadAudio(track.id, e.target.files?.[0] as File)
 													}
 													hidden
 												/>
@@ -290,7 +300,7 @@ const TrackList: React.FC<TrackListProps> = ({
 												<button
 													type="button"
 													className="delete-button small"
-													onClick={() => onRemoveFile(track)}
+													onClick={() => removeAudio(track.id)}
 												>
 													Remove Audio
 												</button>
@@ -302,14 +312,14 @@ const TrackList: React.FC<TrackListProps> = ({
 										<button
 											type="button"
 											className="edit-button"
-											onClick={() => onEdit(track)}
+											onClick={() => setEditTrack(track)}
 										>
 											Edit
 										</button>
 										<button
 											type="button"
 											className="delete-button"
-											onClick={() => onDelete(track)}
+											onClick={() => deleteTrack(track.id)}
 										>
 											Delete
 										</button>
@@ -344,4 +354,4 @@ const TrackList: React.FC<TrackListProps> = ({
 	);
 };
 
-export default TrackList;
+export default React.memo(TrackList);

@@ -5,7 +5,7 @@ import type { TrackFormData } from "./BaseTrackModal";
 interface CreateTrackModalProps {
 	isOpen: boolean;
 	onRequestClose: () => void;
-	onSave: (data: TrackFormData & { coverImage: string }) => void;
+	onSave: (data: TrackFormData) => Promise<void>;
 }
 
 const CreateTrackModal: React.FC<CreateTrackModalProps> = ({

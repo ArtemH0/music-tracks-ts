@@ -1,4 +1,4 @@
-import axiosClient from "./axiosclient";
+import axiosClient from "./axiosClient";
 import { AUDIO_FILE_TYPES, MAX_FILE_SIZE } from "../config";
 import type { Track } from "../types/track.types";
 
